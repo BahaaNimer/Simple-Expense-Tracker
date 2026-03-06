@@ -1,0 +1,15 @@
+export const NEW_TRANSACTION_PAGE = {
+  title: 'New Transaction',
+  amountLabel: 'Amount',
+  typeLabel: 'Type',
+  dateLabel: 'Date',
+  referenceLabel: 'Reference',
+  counterpartyLabel: 'Counterparty',
+  categoryLabel: 'Category',
+  categoryPlaceholder: 'Select a category',
+  statusLabel: 'Status',
+  narrationLabel: 'Narration (optional)',
+  createButton: 'Create',
+  cancelButton: 'Cancel',
+  dateRequired: 'Date is required',
+} as const;

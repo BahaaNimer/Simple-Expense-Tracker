@@ -1,0 +1,15 @@
+# Development image: run Next.js dev server for hot reload
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install deps (will be overwritten by volume, but needed for first install)
+COPY package*.json ./
+RUN npm install
+
+# Source is mounted as volume when running
+# Expose Next.js dev port
+EXPOSE 3000
+
+# Run dev server so changes on the host trigger Fast Refresh
+CMD ["npm", "run", "dev"]

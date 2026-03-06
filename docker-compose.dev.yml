@@ -1,0 +1,19 @@
+# Override for local development with hot reload.
+# Run: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Frontend: source is mounted, runs `npm run dev` → changes reflect immediately.
+# Other services (API, postgres, etc.) unchanged.
+
+services:
+  qashio-frontend:
+    build:
+      context: ./qashio-frontend-assignment
+      dockerfile: Dockerfile.dev
+    volumes:
+      # Mount source so edits on your machine trigger Fast Refresh
+      - ./qashio-frontend-assignment:/app
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+      - WATCHPACK_POLLING=true
+    command: npm run dev
