@@ -13,8 +13,11 @@ import { AUTH_FORM_MAX_WIDTH, AUTH_FORM_PAPER_PADDING } from '../constants/ui';
 
 const signInConfig = AUTH_PAGES.signIn;
 const schema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email'),
-  password: z.string().min(1, 'Password is required'),
+  email: z
+    .string()
+    .min(1, signInConfig.emailRequired)
+    .email(signInConfig.invalidEmail),
+  password: z.string().min(1, signInConfig.passwordRequired),
 });
 
 export default function SignInPage() {
@@ -41,7 +44,8 @@ export default function SignInPage() {
     }
     setLoading(true);
     try {
-      await login(email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      await login(normalizedEmail, password);
       snackbar.showSuccess(SNACKBAR.signedIn);
       router.push('/transactions');
     } catch (err) {
@@ -61,7 +65,7 @@ export default function SignInPage() {
         {signInConfig.title}
       </Typography>
       <Paper variant="outlined" sx={{ p: AUTH_FORM_PAPER_PADDING, mt: 2 }}>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
               {error}

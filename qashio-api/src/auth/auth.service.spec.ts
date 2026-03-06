@@ -70,6 +70,30 @@ describe('AuthService', () => {
     ).rejects.toThrow(ConflictException);
   });
 
+  it('should normalize email to lowercase on register', async () => {
+    await service.register({
+      email: '  User@Example.COM  ',
+      password: 'password123',
+    });
+    expect(userRepo.findOne).toHaveBeenCalledWith({
+      where: { email: 'user@example.com' },
+    });
+    expect(userRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'user@example.com' }),
+    );
+  });
+
+  it('should normalize email to lowercase on login lookup', async () => {
+    userRepo.findOne.mockResolvedValueOnce(mockUser);
+    await service.login({
+      email: '  Test@Example.COM  ',
+      password: 'password',
+    });
+    expect(userRepo.findOne).toHaveBeenCalledWith({
+      where: { email: 'test@example.com' },
+    });
+  });
+
   it('should login with valid credentials', async () => {
     userRepo.findOne.mockResolvedValueOnce(mockUser);
     const result = await service.login({
@@ -87,5 +111,42 @@ describe('AuthService', () => {
     await expect(
       service.login({ email: 'bad@example.com', password: 'password' }),
     ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should throw UnauthorizedException when password is invalid', async () => {
+    userRepo.findOne.mockResolvedValueOnce(mockUser);
+    const bcrypt = require('bcrypt');
+    (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
+    await expect(
+      service.login({ email: 'test@example.com', password: 'wrongpassword' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should throw UnauthorizedException when user is disabled', async () => {
+    userRepo.findOne.mockResolvedValueOnce({ ...mockUser, isActive: false });
+    await expect(
+      service.login({ email: 'test@example.com', password: 'password' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should return user when validateUser finds user by payload sub', async () => {
+    userRepo.findOne.mockResolvedValueOnce(mockUser);
+    const result = await service.validateUser({
+      sub: mockUser.id,
+      email: mockUser.email,
+    });
+    expect(result).toEqual(mockUser);
+    expect(userRepo.findOne).toHaveBeenCalledWith({
+      where: { id: mockUser.id },
+    });
+  });
+
+  it('should return null when validateUser does not find user', async () => {
+    userRepo.findOne.mockResolvedValueOnce(null);
+    const result = await service.validateUser({
+      sub: 'missing-id',
+      email: 'test@example.com',
+    });
+    expect(result).toBeNull();
   });
 });

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { Category } from '../entities/category.entity';
 import { Transaction } from '../entities/transaction.entity';
@@ -9,6 +10,7 @@ describe('CategoriesService', () => {
   let createMock: jest.Mock;
   let saveMock: jest.Mock;
   let findMock: jest.Mock;
+  let findOneMock: jest.Mock;
 
   const USER_ID = 'user-1';
   const mockCategory = {
@@ -36,11 +38,12 @@ describe('CategoriesService', () => {
     createMock = jest.fn().mockReturnValue(mockCategory);
     saveMock = jest.fn().mockResolvedValue(mockCategory);
     findMock = jest.fn().mockResolvedValue([mockCategory]);
+    findOneMock = jest.fn().mockResolvedValue(mockCategory);
     const mockRepository = {
       create: createMock,
       save: saveMock,
       find: findMock,
-      findOne: jest.fn().mockResolvedValue(mockCategory),
+      findOne: findOneMock,
       remove: jest.fn(),
     };
 
@@ -88,5 +91,37 @@ describe('CategoriesService', () => {
     expect(mockTransactionRepo.count).toHaveBeenCalledWith({
       where: { categoryId: 'cat-1', userId: USER_ID },
     });
+  });
+
+  it('should throw BadRequestException when category has transactions', async () => {
+    mockTransactionRepo.count.mockResolvedValue(3);
+    await expect(service.remove('cat-1', USER_ID)).rejects.toThrow(
+      BadRequestException,
+    );
+    await expect(service.remove('cat-1', USER_ID)).rejects.toThrow(
+      /Remove or reassign them before deleting/,
+    );
+  });
+
+  it('should update a category', async () => {
+    const updated = { ...mockCategory, name: 'Updated' };
+    saveMock.mockResolvedValueOnce(updated);
+    const result = await service.update('cat-1', { name: 'Updated' }, USER_ID);
+    expect(result).toMatchObject({ name: 'Updated' });
+    expect(saveMock).toHaveBeenCalled();
+  });
+
+  it('should throw NotFoundException when removing non-existent category', async () => {
+    findOneMock.mockResolvedValueOnce(null);
+    await expect(service.remove('bad-id', USER_ID)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('should throw NotFoundException when updating non-existent category', async () => {
+    findOneMock.mockResolvedValueOnce(null);
+    await expect(
+      service.update('bad-id', { name: 'New' }, USER_ID),
+    ).rejects.toThrow(NotFoundException);
   });
 });

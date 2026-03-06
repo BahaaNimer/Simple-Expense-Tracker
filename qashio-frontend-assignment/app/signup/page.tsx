@@ -23,8 +23,12 @@ const passwordSchema = z
   .regex(/[0-9]/, 'At least one number')
   .regex(/[^A-Za-z0-9]/, 'At least one special character');
 
+const signUpConfig = AUTH_PAGES.signUp;
 const schema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email'),
+  email: z
+    .string()
+    .min(1, signUpConfig.emailRequired)
+    .email(signUpConfig.invalidEmail),
   password: passwordSchema,
 });
 
@@ -64,7 +68,8 @@ export default function SignUpPage() {
     }
     setLoading(true);
     try {
-      await register(email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      await register(normalizedEmail, password);
       snackbar.showSuccess(SNACKBAR.signedUp);
       router.push('/transactions');
     } catch (err) {
@@ -78,15 +83,13 @@ export default function SignUpPage() {
 
   if (authLoading || user) return null;
 
-  const signUpConfig = AUTH_PAGES.signUp;
-
   return (
     <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: AUTH_FORM_MAX_WIDTH, mx: 'auto' }}>
       <Typography variant="h5" fontWeight={600} gutterBottom>
         {signUpConfig.title}
       </Typography>
       <Paper variant="outlined" sx={{ p: AUTH_FORM_PAPER_PADDING, mt: 2 }}>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
               {error}
