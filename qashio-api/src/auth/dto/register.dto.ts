@@ -1,5 +1,6 @@
 import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 const PASSWORD_RULES = {
   minLength: 8,
@@ -11,7 +12,8 @@ const PASSWORD_RULES = {
 
 export class RegisterDto {
   @ApiProperty({ example: 'user@example.com' })
-  @IsEmail()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @IsEmail({}, { message: 'Please provide a valid email address' })
   email: string;
 
   @ApiProperty({

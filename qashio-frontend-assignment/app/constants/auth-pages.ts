@@ -7,6 +7,9 @@ export const AUTH_PAGES = {
     linkHref: '/signup',
     emailLabel: 'Email',
     passwordLabel: 'Password',
+    emailRequired: 'Email is required',
+    invalidEmail: 'Invalid email',
+    passwordRequired: 'Password is required',
   },
   signUp: {
     title: 'Sign up',
@@ -16,6 +19,9 @@ export const AUTH_PAGES = {
     linkHref: '/signin',
     emailLabel: 'Email',
     passwordLabel: 'Password',
+    emailRequired: 'Email is required',
+    invalidEmail: 'Invalid email',
+    passwordRequired: 'Password is required',
   },
   passwordPlaceholder: '* * * * * * * *',
 } as const;

@@ -25,15 +25,16 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
+    const email = dto.email.trim().toLowerCase();
     const existing = await this.userRepo.findOne({
-      where: { email: dto.email },
+      where: { email },
     });
     if (existing) {
       throw new ConflictException('Email already registered');
     }
     const hashed = await bcrypt.hash(dto.password, 10);
     const user = this.userRepo.create({
-      email: dto.email,
+      email,
       password: hashed,
     });
     const saved = await this.userRepo.save(user);
@@ -45,7 +46,8 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.userRepo.findOne({ where: { email: dto.email } });
+    const email = dto.email.trim().toLowerCase();
+    const user = await this.userRepo.findOne({ where: { email } });
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid email or password');
     }
